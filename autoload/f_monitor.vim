@@ -29,17 +29,23 @@ function! f_monitor#start(is_rev, current_mode)
 
     highlight link FMonitorDynamicCursorColor FMonitorCursor
     highlight link FMonitorDynamicCursorLine  FMonitorCursorLine
+    let l:cursor_line = matchadd("FMonitorDynamicCursorLine",  '\%' . line(".") . 'l.*', 999)
+    let s:cursor_mark = matchadd("FMonitorDynamicCursorColor", '\%#', 999)
 
     " main
     call s:main()
+    echo ""
 
+  catch
+    echo v:exception
   finally
     " destruct
+    call matchdelete(l:cursor_line)
+    call matchdelete(s:cursor_mark)
     highlight link FMonitorDynamicCursorColor NONE
     highlight link FMonitorDynamicCursorLine  NONE
 
     let &showmode = s:showmode
-    echo ""
     redraw
   endtry
 
@@ -109,15 +115,13 @@ function! s:main()
   if s:current_mode == 'o' | exe "normal! \<Esc>v\<Esc>" | endif
   if s:current_mode == 'v' | exe "normal! \<Esc>gv" | endif
 
-  let l:cursor_line = matchadd("FMonitorDynamicCursorLine",  '\%' . line(".") . 'l.*', 999)
-
   let l:is_first  = 1
 
   while 1
 
     call s:showModeMessage()
 
-    let l:cursor_mark = matchadd("FMonitorDynamicCursorColor", '\%#', 999)
+    let s:cursor_mark = matchadd("FMonitorDynamicCursorColor", '\%#', 999)
     redraw
 
     let l:char  = l:is_first ? s:getchar() : s:getchar_timeout(g:f_monitor_timeout_ms, reltime())
@@ -143,9 +147,6 @@ function! s:main()
 
     let l:is_first = 0
   endwhile
-
-  call matchdelete(l:cursor_mark)
-  call matchdelete(l:cursor_line)
 
 endfunction
 
