@@ -8,8 +8,8 @@ let s:is_reverse   = 0
 let s:current_mode = "n"
 let s:operator     = ""
 
-function! f_monitor#start(is_rev, current_mode)
-  if g:f_monitor_enable == 0
+function! patet_f#start(is_rev, current_mode)
+  if g:patet_f_enable == 0
     return
   endif
 
@@ -20,17 +20,17 @@ function! f_monitor#start(is_rev, current_mode)
     let s:current_mode = a:current_mode
     let s:operator     = v:operator
 
-    let s:keycode_switch = s:char2nr(g:f_monitor_key_switch)
-    let s:keycode_finish = s:char2nr(g:f_monitor_key_finish)
-    let s:keycode_escape = s:char2nr(g:f_monitor_key_escape)
+    let s:keycode_switch = s:char2nr(g:patet_f_key_switch)
+    let s:keycode_finish = s:char2nr(g:patet_f_key_finish)
+    let s:keycode_escape = s:char2nr(g:patet_f_key_escape)
 
     let s:showmode = &showmode
     set noshowmode
 
-    highlight link FMonitorDynamicCursorColor FMonitorCursor
-    highlight link FMonitorDynamicCursorLine  FMonitorCursorLine
-    let l:cursor_line = matchadd("FMonitorDynamicCursorLine",  '\%' . line(".") . 'l.*', 999)
-    let s:cursor_mark = matchadd("FMonitorDynamicCursorColor", '\%#', 999)
+    highlight link PatetFDynamicCursorColor PatetFCursor
+    highlight link PatetFDynamicCursorLine  PatetFCursorLine
+    let l:cursor_line = matchadd("PatetFDynamicCursorLine",  '\%' . line(".") . 'l.*', 999)
+    let s:cursor_mark = matchadd("PatetFDynamicCursorColor", '\%#', 999)
 
     " main
     call s:main()
@@ -42,8 +42,8 @@ function! f_monitor#start(is_rev, current_mode)
     " destruct
     call matchdelete(l:cursor_line)
     call matchdelete(s:cursor_mark)
-    highlight link FMonitorDynamicCursorColor NONE
-    highlight link FMonitorDynamicCursorLine  NONE
+    highlight link PatetFDynamicCursorColor NONE
+    highlight link PatetFDynamicCursorLine  NONE
 
     let &showmode = s:showmode
     redraw
@@ -95,7 +95,7 @@ function! s:getchar_timeout(timeout_lag_ms, last_pressed_time)
 endfunction
 
 function! s:showModeMessage()
-  if g:f_monitor_showmode == 0
+  if g:patet_f_showmode == 0
     return
   endif
   let l:f_type   = s:is_reverse == 0 ? 'f' : 'F'
@@ -118,10 +118,10 @@ function! s:main()
 
     call s:showModeMessage()
 
-    let s:cursor_mark = matchadd("FMonitorDynamicCursorColor", '\%#', 999)
+    let s:cursor_mark = matchadd("PatetFDynamicCursorColor", '\%#', 999)
     redraw
 
-    let l:char  = l:is_first ? s:getchar() : s:getchar_timeout(g:f_monitor_timeout_ms, reltime())
+    let l:char  = l:is_first ? s:getchar() : s:getchar_timeout(g:patet_f_timeout_ms, reltime())
     let l:count = l:is_first ? l:count : 1
 
     if l:char == s:keycode_escape
