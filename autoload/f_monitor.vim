@@ -1,8 +1,5 @@
 "TODO
-" - コードの整理(整形およびコメント整理)
 " - ライセンスとか。。
-" - モードメッセージの表示処理修正
-" - visualモード選択中の動作修正
 
 let s:save_cpo = &cpo
 set cpo&vim
@@ -16,30 +13,40 @@ function! f_monitor#start(is_rev, current_mode)
     return
   endif
 
-  " init
-  echo ""
-  let s:is_reverse   = a:is_rev
-  let s:current_mode = a:current_mode
-  let s:operator     = v:operator
+  try
+    " init
+    echo ""
+    let s:is_reverse   = a:is_rev
+    let s:current_mode = a:current_mode
+    let s:operator     = v:operator
 
-  let s:showmode = &showmode
-  set noshowmode
+    let s:keycode_switch = s:char2nr(g:f_monitor_key_switch)
+    let s:keycode_finish = s:char2nr(g:f_monitor_key_finish)
+    let s:keycode_escape = s:char2nr(g:f_monitor_key_escape)
 
-  exe 'highlight link FMonitorDynamicCursorColor ' . g:f_monitor_mark_cursor_color
-  exe 'highlight link FMonitorDynamicCursorLine  ' . g:f_monitor_mark_cursor_line
+    let s:showmode = &showmode
+    set noshowmode
 
-  " main
-  call s:startFMonitorMode()
+    highlight link FMonitorDynamicCursorColor FMonitorCursor
+    highlight link FMonitorDynamicCursorLine  FMonitorCursorLine
 
-  " destruct
-  highlight link FMonitorDynamicCursorColor NONE
-  highlight link FMonitorDynamicCursorLine  NONE
+    " main
+    call s:main()
 
-  let &showmode = s:showmode
+  finally
+    " destruct
+    highlight link FMonitorDynamicCursorColor NONE
+    highlight link FMonitorDynamicCursorLine  NONE
 
-  echo ""
-  redraw
+    let &showmode = s:showmode
+    echo ""
+    redraw
+  endtry
 
+endfunction
+
+function! s:char2nr(key_name)
+  exe 'return strpart(a:key_name, 0, 1) == "<" ? char2nr("\' . a:key_name . '") : char2nr(a:key_name)'
 endfunction
 
 " Returned time lag
@@ -51,15 +58,16 @@ function! s:timelag(b_time, a_time)
   return float2nr(l:timelag * 1000.0)
 endfunction
 
-" Workaround for the <expr> mappings, <C-c>
+" Workaround for the <expr> mappings
 function! s:getchar(...)
   let l:mode = get(a:, 1, 0)
   while 1
-    try
-      let l:char = call("getchar", a:000)
-    catch /^Vim:Interrupt$/
-      let l:char = 3 " <C-c>
-    endtry
+    let l:char = call("getchar", a:000)
+    " Interrupt Enabled
+    "try
+    "catch /^Vim:Interrupt$/
+    "  let l:char = 3 " <C-c>
+    "endtry
     " Workaround for the <expr> mappings
     if string(l:char) !=# "\x80\xfd`"
       return mode != 1 ? l:char : !!l:char
@@ -73,8 +81,7 @@ function! s:getchar_timeout(timeout_lag_ms, last_pressed_time)
     while 1
       let l:c = s:getchar(0)
       if s:timelag(a:last_pressed_time, reltime()) > a:timeout_lag_ms
-        "TODO finish keycode 修正
-        return 13
+        return s:keycode_finish
       endif
       if l:c != 0 | break | endif
     endwhile
@@ -95,7 +102,7 @@ function! s:showModeMessage()
   echo '-- ' . l:operator . l:f_type . ' MOVE' . l:mode . ' --'
 endfunction
 
-function! s:startFMonitorMode()
+function! s:main()
 
   let l:count = v:prevcount ? v:prevcount : 1
 
@@ -116,17 +123,17 @@ function! s:startFMonitorMode()
     let l:char  = l:is_first ? s:getchar() : s:getchar_timeout(g:f_monitor_timeout_ms, reltime())
     let l:count = l:is_first ? l:count : 1
 
-    if l:char == g:f_monitor_keycode_escape
+    if l:char == s:keycode_escape
       if s:current_mode == 'o' | exe "normal! \<Esc>" | endif
       break
     endif
 
-    if l:char == g:f_monitor_keycode_finish
+    if l:char == s:keycode_finish
       if s:current_mode == 'o' | exe "normal! \<Esc>gv" . s:operator | endif
       break
     endif
 
-    if l:char == g:f_monitor_keycode_switch
+    if l:char == s:keycode_switch
       let s:is_reverse = !s:is_reverse
     endif
 
