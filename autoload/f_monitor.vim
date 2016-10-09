@@ -55,10 +55,7 @@ function! s:char2nr(key_name)
   exe 'return strpart(a:key_name, 0, 1) == "<" ? char2nr("\' . a:key_name . '") : char2nr(a:key_name)'
 endfunction
 
-" Returned time lag
-" @param  list b_time before timestamp
-" @param  list a_time after  timestamp
-" @return number lag(ms)
+" get time lag value(ms)
 function! s:timelag(b_time, a_time)
   let l:timelag = str2float(reltimestr(reltime(a:b_time, a:a_time)))
   return float2nr(l:timelag * 1000.0)
@@ -133,7 +130,10 @@ function! s:main()
     endif
 
     if l:char == s:keycode_finish
-      if s:current_mode == 'o' | exe "normal! \<Esc>gv" . s:operator | endif
+      if s:current_mode == 'o'
+        exe "normal! \<Esc>gv" . s:operator
+        if s:operator == 'c' | startinsert | endif
+      endif
       break
     endif
 
