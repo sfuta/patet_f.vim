@@ -15,20 +15,27 @@ function! f_monitor#start(is_rev, current_mode)
   if g:f_monitor_enable == 0
     return
   endif
+
+  " init
   echo ""
   let s:is_reverse   = a:is_rev
   let s:current_mode = a:current_mode
   let s:operator     = v:operator
 
-  let l:showmode = &showmode
+  let s:showmode = &showmode
   set noshowmode
 
   exe 'highlight link FMonitorDynamicCursorColor ' . g:f_monitor_mark_cursor_color
   exe 'highlight link FMonitorDynamicCursorLine  ' . g:f_monitor_mark_cursor_line
 
+  " main
   call s:startFMonitorMode()
 
-  let &showmode = l:showmode
+  " destruct
+  highlight link FMonitorDynamicCursorColor NONE
+  highlight link FMonitorDynamicCursorLine  NONE
+
+  let &showmode = s:showmode
 
   echo ""
   redraw
@@ -132,8 +139,6 @@ function! s:startFMonitorMode()
 
   call matchdelete(l:cursor_mark)
   call matchdelete(l:cursor_line)
-  highlight link FMonitorDynamicCursorColor NONE
-  highlight link FMonitorDynamicCursorLine  NONE
 
 endfunction
 
