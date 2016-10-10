@@ -3,11 +3,9 @@ if exists('g:loaded_patet_f') && g:loaded_patet_f
 endif
 let g:loaded_patet_f = 1
 
-let g:patet_f_start_right_key = get(g:, 'patet_f_start_right_key', 'f')
-let g:patet_f_start_left_key  = get(g:, 'patet_f_start_left_key',  'F')
-let g:patet_f_enable          = get(g:, 'patet_f_enable', 1)
-let g:patet_f_timeout_ms      = get(g:, 'patet_f_timeout_ms', 0)
-let g:patet_f_showmode        = get(g:, 'patet_f_showmode', &showmode)
+let g:patet_f_enable     = get(g:, 'patet_f_enable', 1)
+let g:patet_f_timeout_ms = get(g:, 'patet_f_timeout_ms', 0)
+let g:patet_f_showmode   = get(g:, 'patet_f_showmode', &showmode)
 
 " f mode operate keys
 let g:patet_f_key_switch = get(g:, 'patet_f_key_switch', '<C-f>')
@@ -19,10 +17,19 @@ highlight PatetFCursor term=reverse cterm=reverse
 highlight PatetFCursorLine term=underline cterm=underline ctermbg=234
 
 command! -nargs=+ CallPatetFStart call patet_f#start(<args>)
-exe 'nnoremap ' . g:patet_f_start_right_key . ' <Esc>:CallPatetFStart 0, "n"<CR>'
-exe 'nnoremap ' . g:patet_f_start_left_key  . ' <Esc>:CallPatetFStart 1, "n"<CR>'
-exe 'xnoremap ' . g:patet_f_start_right_key . ' <Esc>:CallPatetFStart 0, "v"<CR>'
-exe 'xnoremap ' . g:patet_f_start_left_key  . ' <Esc>:CallPatetFStart 1, "v"<CR>'
-exe 'onoremap ' . g:patet_f_start_right_key . ' <Esc>:CallPatetFStart 0, "o"<CR>'
-exe 'onoremap ' . g:patet_f_start_left_key  . ' <Esc>:CallPatetFStart 1, "o"<CR>'
 
+nnoremap <Plug>patet_f_r_n <Esc>:CallPatetFStart 0, "n"<CR>
+nnoremap <Plug>patet_f_l_n <Esc>:CallPatetFStart 1, "n"<CR>
+xnoremap <Plug>patet_f_r_x <Esc>:CallPatetFStart 0, "v"<CR>
+xnoremap <Plug>patet_f_l_x <Esc>:CallPatetFStart 1, "v"<CR>
+onoremap <Plug>patet_f_r_o <Esc>:CallPatetFStart 0, "o"<CR>
+onoremap <Plug>patet_f_l_o <Esc>:CallPatetFStart 1, "o"<CR>
+
+if !exists("g:patet_f_no_mappings") || !g:patet_f_no_mappings
+  nmap f <Plug>patet_f_r_n
+  nmap F <Plug>patet_f_l_n
+  xmap f <Plug>patet_f_r_x
+  xmap F <Plug>patet_f_l_x
+  omap f <Plug>patet_f_r_o
+  omap F <Plug>patet_f_l_o
+endif
