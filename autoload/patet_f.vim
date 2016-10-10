@@ -139,6 +139,7 @@ function! s:main()
 
     if l:char == s:keycode_switch
       let s:is_reverse = !s:is_reverse
+      continue
     endif
 
     if s:current_mode == 'v' || s:current_mode == 'o' | exe "normal! \<Esc>gv" | endif
