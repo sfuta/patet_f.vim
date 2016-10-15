@@ -18,18 +18,18 @@ highlight PatetFCursorLine term=underline cterm=underline ctermbg=234
 
 command! -nargs=+ CallPatetFStart call patet_f#start(<args>)
 
-nnoremap <Plug>patet_f_r_n <Esc>:CallPatetFStart 0, "n"<CR>
-nnoremap <Plug>patet_f_l_n <Esc>:CallPatetFStart 1, "n"<CR>
-xnoremap <Plug>patet_f_r_x <Esc>:CallPatetFStart 0, "v"<CR>
-xnoremap <Plug>patet_f_l_x <Esc>:CallPatetFStart 1, "v"<CR>
-onoremap <Plug>patet_f_r_o <Esc>:CallPatetFStart 0, "o"<CR>
-onoremap <Plug>patet_f_l_o <Esc>:CallPatetFStart 1, "o"<CR>
+nnoremap <Plug>patet_f_forward_n <Esc>:CallPatetFStart 0, "n"<CR>
+nnoremap <Plug>patet_f_back_n    <Esc>:CallPatetFStart 1, "n"<CR>
+xnoremap <Plug>patet_f_forward_x <Esc>:CallPatetFStart 0, "v"<CR>
+xnoremap <Plug>patet_f_back_x    <Esc>:CallPatetFStart 1, "v"<CR>
+onoremap <Plug>patet_f_forward_o <Esc>:CallPatetFStart 0, "o"<CR>
+onoremap <Plug>patet_f_back_o    <Esc>:CallPatetFStart 1, "o"<CR>
 
 if !exists("g:patet_f_no_mappings") || !g:patet_f_no_mappings
-  nmap f <Plug>patet_f_r_n
-  nmap F <Plug>patet_f_l_n
-  xmap f <Plug>patet_f_r_x
-  xmap F <Plug>patet_f_l_x
-  omap f <Plug>patet_f_r_o
-  omap F <Plug>patet_f_l_o
+  nmap f <Plug>patet_f_forward_n
+  nmap F <Plug>patet_f_back_n
+  xmap f <Plug>patet_f_forward_x
+  xmap F <Plug>patet_f_back_x
+  omap f <Plug>patet_f_forward_o
+  omap F <Plug>patet_f_back_o
 endif

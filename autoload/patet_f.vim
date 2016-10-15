@@ -7,6 +7,9 @@ set cpo&vim
 let s:is_reverse   = 0
 let s:current_mode = "n"
 let s:operator     = ""
+let s:register     = ""
+" load expternal plugin
+silent! call repeat#load()
 
 function! patet_f#start(is_rev, current_mode)
   if g:patet_f_enable == 0
@@ -19,6 +22,7 @@ function! patet_f#start(is_rev, current_mode)
     let s:is_reverse   = a:is_rev
     let s:current_mode = a:current_mode
     let s:operator     = v:operator
+    let s:register     = v:register
 
     let s:keycode_switch = s:char2nr(g:patet_f_key_switch)
     let s:keycode_finish = s:char2nr(g:patet_f_key_finish)
@@ -33,7 +37,7 @@ function! patet_f#start(is_rev, current_mode)
     let s:cursor_mark = matchadd("PatetFDynamicCursorColor", '\%#', 999)
 
     " main
-    call s:main()
+    call s:main(a:is_rev)
     echo ""
 
   catch
@@ -105,7 +109,7 @@ function! s:showModeMessage()
   echo '-- ' . l:operator . l:f_type . ' MOVE' . l:mode . ' --'
 endfunction
 
-function! s:main()
+function! s:main(is_rev)
 
   let l:count = v:prevcount ? v:prevcount : 1
 
@@ -114,6 +118,8 @@ function! s:main()
 
   let l:is_first  = 1
 
+  let l:chars = ''
+
   while 1
 
     call s:showModeMessage()
@@ -121,8 +127,9 @@ function! s:main()
     let s:cursor_mark = matchadd("PatetFDynamicCursorColor", '\%#', 999)
     redraw
 
-    let l:char  = l:is_first ? s:getchar() : s:getchar_timeout(g:patet_f_timeout_ms, reltime())
-    let l:count = l:is_first ? l:count : 1
+    let l:char   = l:is_first || !has('reltime') ? s:getchar() : s:getchar_timeout(g:patet_f_timeout_ms, reltime())
+    let l:count  = l:is_first ? l:count : 1
+    let l:chars .= nr2char(l:char)
 
     if l:char == s:keycode_escape
       if s:current_mode == 'o' | exe "normal! \<Esc>" | endif
@@ -131,8 +138,15 @@ function! s:main()
 
     if l:char == s:keycode_finish
       if s:current_mode == 'o'
-        exe "normal! \<Esc>gv" . s:operator
+        exe "normal! \<Esc>gv" . '"' . s:register . s:operator
+
         if s:operator == 'c' | startinsert | endif
+
+        " For dot repeat
+        if s:operator != 'y' && exists('g:loaded_repeat') && g:loaded_repeat
+          let l:base   = '"' . s:register . s:operator . "\<Esc>:CallPatetFStart ". a:is_rev . ", 'o'\<CR>"
+          call repeat#set(l:base . l:chars . (s:operator == 'c' ? '' : ''), v:prevcount)
+        endif
       endif
       break
     endif
