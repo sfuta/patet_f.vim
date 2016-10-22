@@ -8,10 +8,11 @@ let s:is_reverse   = 0
 let s:current_mode = "n"
 let s:operator     = ""
 let s:register     = ""
+let s:is_repeat    = 0
 " load expternal plugin
 silent! call repeat#load()
 
-function! patet_f#start(is_rev, current_mode)
+function! patet_f#start(is_rev, current_mode, ...)
   if g:patet_f_enable == 0
     return
   endif
@@ -22,19 +23,21 @@ function! patet_f#start(is_rev, current_mode)
     let s:is_reverse   = a:is_rev
     let s:current_mode = a:current_mode
     let s:operator     = v:operator
-    let s:register     = v:register
+    let s:register     = '"' . v:register
+    let s:is_repeat    = get(a:, 1, 0)
 
     let s:keycode_switch = s:char2nr(g:patet_f_key_switch)
     let s:keycode_finish = s:char2nr(g:patet_f_key_finish)
     let s:keycode_escape = s:char2nr(g:patet_f_key_escape)
 
-    let s:showmode = &showmode
-    set noshowmode
-
-    highlight link PatetFDynamicCursorColor PatetFCursor
-    highlight link PatetFDynamicCursorLine  PatetFCursorLine
-    let l:cursor_line = matchadd("PatetFDynamicCursorLine",  '\%' . line(".") . 'l.*', 999)
-    let s:cursor_mark = matchadd("PatetFDynamicCursorColor", '\%#', 999)
+    if !s:is_repeat
+      let s:showmode = &showmode
+      set noshowmode
+      highlight link PatetFDynamicCursorColor PatetFCursor
+      highlight link PatetFDynamicCursorLine  PatetFCursorLine
+      let l:cursor_line = matchadd("PatetFDynamicCursorLine",  '\%' . line(".") . 'l.*', 999)
+      let s:cursor_mark = matchadd("PatetFDynamicCursorColor", '\%#', 999)
+    endif
 
     " main
     call s:main(a:is_rev)
@@ -44,13 +47,15 @@ function! patet_f#start(is_rev, current_mode)
     echo v:exception
   finally
     " destruct
-    call matchdelete(l:cursor_line)
-    call matchdelete(s:cursor_mark)
-    highlight link PatetFDynamicCursorColor NONE
-    highlight link PatetFDynamicCursorLine  NONE
+    if !s:is_repeat
+      call matchdelete(l:cursor_line)
+      call matchdelete(s:cursor_mark)
+      highlight link PatetFDynamicCursorColor NONE
+      highlight link PatetFDynamicCursorLine  NONE
 
-    let &showmode = s:showmode
-    redraw
+      let &showmode = s:showmode
+      redraw
+    endif
   endtry
 
 endfunction
@@ -98,7 +103,7 @@ function! s:getchar_timeout(timeout_lag_ms, last_pressed_time)
   return l:c
 endfunction
 
-function! s:showModeMessage()
+function! s:show_mode_message()
   if g:patet_f_showmode == 0
     return
   endif
@@ -109,23 +114,30 @@ function! s:showModeMessage()
   echo '-- ' . l:operator . l:f_type . ' MOVE' . l:mode . ' --'
 endfunction
 
+"For dot repeat
+function! s:repeat_set(command)
+  if exists('g:loaded_repeat') && g:loaded_repeat
+    silent! call repeat#set(a:command, v:prevcount)
+  endif
+endfunction
+
 function! s:main(is_rev)
 
-  let l:count = v:prevcount ? v:prevcount : 1
+  let l:count    = v:prevcount ? v:prevcount : 1
+  let l:is_first = 1
 
   if s:current_mode == 'o' | exe "normal! \<Esc>v\<Esc>" | endif
   if s:current_mode == 'v' | exe "normal! \<Esc>gv" | endif
-
-  let l:is_first  = 1
 
   let l:chars = ''
 
   while 1
 
-    call s:showModeMessage()
-
-    let s:cursor_mark = matchadd("PatetFDynamicCursorColor", '\%#', 999)
-    redraw
+    if !s:is_repeat
+      call s:show_mode_message()
+      let s:cursor_mark = matchadd("PatetFDynamicCursorColor", '\%#', 999)
+      redraw
+    endif
 
     let l:char   = l:is_first || !has('reltime') ? s:getchar() : s:getchar_timeout(g:patet_f_timeout_ms, reltime())
     let l:count  = l:is_first ? l:count : 1
@@ -138,15 +150,18 @@ function! s:main(is_rev)
 
     if l:char == s:keycode_finish
       if s:current_mode == 'o'
-        exe "normal! \<Esc>gv" . '"' . s:register . s:operator
+        let l:base = s:register . s:operator . "\<Esc>:CallPatetFStart ". a:is_rev . ", 'o', 1\<CR>"
 
-        if s:operator == 'c' | startinsert | endif
+        exe "normal! \<Esc>gv" . s:register . (s:operator == 'y' ? 'y' : 'd')
 
-        " For dot repeat
-        if s:operator != 'y' && exists('g:loaded_repeat') && g:loaded_repeat
-          let l:base   = '"' . s:register . s:operator . "\<Esc>:CallPatetFStart ". a:is_rev . ", 'o'\<CR>"
-          call repeat#set(l:base . l:chars . (s:operator == 'c' ? '' : ''), v:prevcount)
+        if s:operator == 'c'
+          if s:is_repeat | put! . | endif
+          call s:repeat_set(l:base . l:chars .  "\<Esc>")
+          startinsert
+        elseif s:operator == 'd'
+          call s:repeat_set(l:base . l:chars)
         endif
+
       endif
       break
     endif
