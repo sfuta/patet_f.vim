@@ -1,3 +1,9 @@
+"=============================================================================
+" Copyright (c) 2016 sfuta
+" Released under the MIT license
+" doc/MIT-LICENSE
+"=============================================================================
+
 if exists('g:loaded_patet_f') && g:loaded_patet_f
   finish
 endif
@@ -12,7 +18,7 @@ let g:patet_f_key_switch = get(g:, 'patet_f_key_switch', '<C-f>')
 let g:patet_f_key_finish = get(g:, 'patet_f_key_finish', '<CR>')
 let g:patet_f_key_escape = get(g:, 'patet_f_key_escape', '<Esc>')
 
-" highright configs
+" highlight configs
 highlight PatetFCursor term=reverse cterm=reverse
 highlight PatetFCursorLine term=underline cterm=underline ctermbg=234
 
